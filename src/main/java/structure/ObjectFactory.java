@@ -1,19 +1,17 @@
-package factory;
+package structure;
+
+import javax.xml.bind.annotation.XmlRegistry;
 
 /**
  * Created by AKrzos on 2016-07-25.
  */
-import structure.Order;
-
-import javax.xml.bind.annotation.XmlRegistry;
-
 @XmlRegistry
 public class ObjectFactory {
 
     public ObjectFactory() {
     }
 
-    public Order createCustomer() {
+    public Order createOrder() {
         return new Order();
     }
 }
