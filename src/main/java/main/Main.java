@@ -6,22 +6,24 @@ import org.apache.camel.impl.DefaultCamelContext;
 import structure.Order;
 import structure.Products;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Unmarshaller;
+
 /**
  * Created by AKrzos on 2016-07-23.
  */
 public class Main {
     public static void main(String[] args) {
-//        Order order = new Order("ord_1469201617839", "dTQ5vSBRNP");
-        MyRouteBuilder routeBuilder = new MyRouteBuilder();
-        CamelContext context = new DefaultCamelContext();
-
         try {
-            context.addRoutes(routeBuilder);
-            context.start();
-            Thread.sleep(6 * 1000);
-            context.stop();
+            xmlToObject();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    private static void xmlToObject() throws Exception {
+        JAXBContext jc = JAXBContext.newInstance( "factory" );
+        Unmarshaller unmarshaller = jc.createUnmarshaller();
+        Order order = (Order)unmarshaller.unmarshal(ClassLoader.getSystemResourceAsStream("sheet.xml"));
+        System.out.println(order);
     }
 }
