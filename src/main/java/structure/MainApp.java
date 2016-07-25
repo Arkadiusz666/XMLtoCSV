@@ -2,6 +2,7 @@ package structure;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
+import java.io.File;
 import java.io.FileInputStream;
 
 /**
@@ -14,10 +15,23 @@ public class MainApp {
     }
 
     private static void xmlToObject() throws Exception {
+
+
         JAXBContext jc = JAXBContext.newInstance( "structure" );
         Unmarshaller u = jc.createUnmarshaller();
-        FileInputStream fileInputStream = new FileInputStream("sheet.xml");
-        Order order = (Order)u.unmarshal( fileInputStream );
-        System.out.println(order);
+
+        for (File file : getFilesInCurrentFolder()) {
+            if (file.getName().matches(".*.xml")) { //todo double check formula (end line?)
+                FileInputStream fileInputStream = new FileInputStream("data/"+file.getName());
+                Order order = (Order)u.unmarshal( fileInputStream );
+                System.out.println(order.getId());
+            }
+        }
+    }
+
+    private static File[] getFilesInCurrentFolder() {
+        File sourceFolder = new File("data/");
+        File[] filesInSourceFolder = sourceFolder.listFiles();
+        return filesInSourceFolder;
     }
 }
