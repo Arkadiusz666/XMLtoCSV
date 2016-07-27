@@ -21,11 +21,32 @@
         <artifactId>camel-spring</artifactId>
         <version>2.17.2</version>
     </dependency>
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-csv</artifactId>
+        <version>2.17.2</version>
+    </dependency>
     <!-- https://mvnrepository.com/artifact/org.springframework/spring-core -->
     <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
         <version>4.3.1.RELEASE</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-core</artifactId>
+        <version>2.17.2</version>
+    </dependency>
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-core</artifactId>
+        <version>2.17.2</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.apache.camel/camel-bindy -->
+    <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-bindy</artifactId>
+        <version>2.17.2</version>
     </dependency>
 
 
