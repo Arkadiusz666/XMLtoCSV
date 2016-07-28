@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 /**
  * Created by AKrzos on 2016-07-25.
  */
-@CsvRecord(separator = ";")
+@CsvRecord(separator = ";", generateHeaderColumns=true)
 
 public class Product {
     @DataField(pos=1)
