@@ -112,7 +112,6 @@ public class MainApp {
         Thread.sleep(1000);
         context.stop();
 
-
     }
 
     private static void SaveOrdersToCSVBindy(List<Order> ordersList) throws Exception {
