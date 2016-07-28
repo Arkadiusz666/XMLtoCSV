@@ -1,11 +1,11 @@
 package structure;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.impl.DefaultCamelContext;
+import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.spi.DataFormat;
 
 import javax.xml.bind.JAXBContext;
@@ -16,6 +16,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
+
+import static java.util.Arrays.asList;
 
 /**
  * Created by AKrzos on 2016-07-25.
@@ -67,6 +69,53 @@ public class MainApp {
     public static void main(String args[]) throws Exception {
 
 
+        List<Order> ordersList = xmlToObject();
+
+//        SaveOrdersToCSVBindy(ordersList);
+
+        SaveOrdersToCSVCamel(ordersList);
+
+    }
+
+    private static void SaveOrdersToCSVCamel(List<Order> ordersList) throws Exception {
+
+
+        CamelContext context = new DefaultCamelContext();
+        final CsvDataFormat csvDataFormat = new CsvDataFormat();
+        csvDataFormat.setDelimiter(";");
+//        csvDataFormat.setHeader(asList("Id", "Q", "Price"));
+
+        context.addRoutes(new RouteBuilder() {
+            public void configure() {
+                from("direct:toCsv")
+                        .marshal(csvDataFormat)
+//                        .convertBodyTo(String.class)
+                        .to("file://data/csvCamel");
+            }
+        });
+
+        ProducerTemplate template = context.createProducerTemplate();
+        context.start();
+
+        for (Order order : ordersList) {
+            List<Map<String, String>> body = new LinkedList<Map<String, String>>();
+            for (Product product : order.getProducts().getProduct()) {
+                Map<String, String> singleRow = new LinkedHashMap<String, String>();
+                singleRow.put("quantity", String.valueOf(product.getQuantity()));
+                singleRow.put("id", product.getId());
+                singleRow.put("price", product.getPrice());
+                body.add(singleRow);
+            }
+            template.sendBody("direct:toCsv", body);
+        }
+
+        Thread.sleep(1000);
+        context.stop();
+
+
+    }
+
+    private static void SaveOrdersToCSVBindy(List<Order> ordersList) throws Exception {
         CamelContext context = new DefaultCamelContext();
         final DataFormat format = new BindyCsvDataFormat(Product.class);
 
@@ -82,12 +131,12 @@ public class MainApp {
 
         context.start();
 
-        List<Order> ordersList = xmlToObject();
-
         for (Order order : ordersList) {
             template.sendBody("direct:toCsv", order.getProducts().getProduct());
         }
-
+        Thread.sleep(1000);
+        context.stop();
+    }
 //todo -commented code
 //        List<Order> OrdersList = xmlToObject();
 //        Map<String, List<String>> productsMap;
@@ -100,9 +149,7 @@ public class MainApp {
 //
 //        }
 
-        Thread.sleep(1000);
-        context.stop();
-    }
+
 
     private static void ObjectToCSV(Map<String, List<String>> productsMap) {
     }
