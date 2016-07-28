@@ -4,14 +4,10 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.model.dataformat.BindyType;
-import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.spi.DataFormat;
 
-import javax.jms.ConnectionFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -72,13 +68,12 @@ public class MainApp {
 
 
         CamelContext context = new DefaultCamelContext();
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
-        context.addComponent("test-jms", JmsComponent.jmsComponentAutoAcknowledge(connectionFactory));
+        final DataFormat format = new BindyCsvDataFormat(Product.class);
 
         context.addRoutes(new RouteBuilder() {
             public void configure() {
-                from("test-jms:queue:test.queue")
-                        .marshal().csv()
+                from("direct:toCsv")
+                        .marshal(format)
                         .to("file://data/csv");
             }
         });
@@ -87,25 +82,11 @@ public class MainApp {
 
         context.start();
 
-        //todo test code
-        String[] testArray = new String[100];
-        String[] testArray2 = new String[100];
-        for (int i = 0; i < testArray.length; i++) {
-            testArray[i]= "blabla"+i;
-            testArray2[i]="costam"+i;
+        List<Order> ordersList = xmlToObject();
+
+        for (Order order : ordersList) {
+            template.sendBody("direct:toCsv", order.getProducts().getProduct());
         }
-        Map<String, String[]> testMap = new LinkedHashMap<String, String[]>();
-        testMap.put("testArray", testArray);
-        testMap.put("testArray2", testArray2);
-        template.sendBody("test-jms:queue:test.queue", testMap);
-        Map<String, String> testMap2 = new LinkedHashMap<String, String>();
-        testMap2.put("id1", "var1");
-        testMap2.put("id2", "var2");
-        testMap2.put("id3", "var3");
-//        template.sendBody("test-jms:queue:test.queue", testMap2);
-
-        //todo test code
-
 
 //todo -commented code
 //        List<Order> OrdersList = xmlToObject();
@@ -124,7 +105,6 @@ public class MainApp {
     }
 
     private static void ObjectToCSV(Map<String, List<String>> productsMap) {
-
     }
 
     private static Map<String, List<String>> MapProductColumns(Order order) {
