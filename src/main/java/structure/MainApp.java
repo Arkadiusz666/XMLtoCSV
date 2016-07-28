@@ -1,13 +1,17 @@
 package structure;
 
+import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.jms.JmsComponent;
 import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.model.dataformat.BindyType;
 import org.apache.camel.model.dataformat.CsvDataFormat;
 import org.apache.camel.spi.DataFormat;
 
+import javax.jms.ConnectionFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -66,30 +70,57 @@ public class MainApp {
 
     public static void main(String args[]) throws Exception {
 
+
         CamelContext context = new DefaultCamelContext();
+        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        context.addComponent("test-jms", JmsComponent.jmsComponentAutoAcknowledge(connectionFactory));
+
         context.addRoutes(new RouteBuilder() {
             public void configure() {
-                from("direct:start")
+                from("test-jms:queue:test.queue")
                         .marshal().csv()
-                        .to("file:/data/csv");
+                        .to("file://data/csv");
             }
         });
 
+        ProducerTemplate template = context.createProducerTemplate();
 
+        context.start();
 
-        List<Order> OrdersList = xmlToObject();
-        Map<String, List<String>> ProductsMap;
-        for (Order order : OrdersList) {
-            ProductsMap= MapProductColumns(order);
-            ObjectToCSV(ProductsMap);
-            context.start();
-            Thread.sleep(500);
-            context.stop();
+        //todo test code
+        String[] testArray = new String[100];
+        String[] testArray2 = new String[100];
+        for (int i = 0; i < testArray.length; i++) {
+            testArray[i]= "blabla"+i;
+            testArray2[i]="costam"+i;
         }
+        Map<String, String[]> testMap = new LinkedHashMap<String, String[]>();
+        testMap.put("testArray", testArray);
+        testMap.put("testArray2", testArray2);
+        template.sendBody("test-jms:queue:test.queue", testMap);
+        Map<String, String> testMap2 = new LinkedHashMap<String, String>();
+        testMap2.put("id1", "var1");
+        testMap2.put("id2", "var2");
+        testMap2.put("id3", "var3");
+//        template.sendBody("test-jms:queue:test.queue", testMap2);
+
+        //todo test code
 
 
+//todo -commented code
+//        List<Order> OrdersList = xmlToObject();
+//        Map<String, List<String>> productsMap;
+//
+//        for (Order order : OrdersList) {
+//            productsMap= MapProductColumns(order);
+////            ObjectToCSV(ProductsMap);
+////            template.sendBody("file://data/csv", "Hello");
+////            template.sendBody("test-jms:queue:test.queue", productsMap);
+//
+//        }
 
-
+        Thread.sleep(1000);
+        context.stop();
     }
 
     private static void ObjectToCSV(Map<String, List<String>> productsMap) {
@@ -149,8 +180,6 @@ public class MainApp {
         }
     }
 
-
-
 //    private static void objectToCSV(List<Order> orderList) throws JAXBException {
 //        CsvDataFormat csv = new CsvDataFormat();
 //        csv.setDelimiter(";");
@@ -158,8 +187,6 @@ public class MainApp {
 //        MyRouteBuilder routeBuilder = new MyRouteBuilder();
 //        CamelContext context = new DefaultCamelContext();
 //    }
-
-
 
     private static File[] getFilesInCurrentFolder() {
         File sourceFolder = new File(CURRENT_FOLDER_PATH);
