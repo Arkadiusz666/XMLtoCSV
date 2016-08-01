@@ -1,20 +1,7 @@
 package structure;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.ProducerTemplate;
-import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.dataformat.bindy.csv.BindyCsvDataFormat;
-import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.camel.model.dataformat.CsvDataFormat;
-import org.apache.camel.spi.DataFormat;
+import converter.ConverterXMLtoCSV;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.*;
 
 /**
@@ -61,169 +48,13 @@ import java.util.*;
 //
 //        Each SubTask should include unit/integration testing
 public class MainApp {
-    private static final String CURRENT_FOLDER_PATH = "data/";
-    private static final String CONVERTED_FILES_FOLDER_PATH = "data/converted/";
 
     public static void main(String args[]) throws Exception {
 
-        List<Order> ordersList = xmlToObject();
+        List<Order> ordersList = ConverterXMLtoCSV.xmlToObject();
 
-//        SaveOrdersToCSVBindy(ordersList);
+        ConverterXMLtoCSV.saveOrdersToCsvUsingBindy(ordersList);
 
-        saveOrdersToCSVCamel(ordersList);
-
-    }
-
-    private static void saveOrdersToCSVCamel(List<Order> ordersList) throws Exception {
-        for (Order order : ordersList) {
-            saveSingleOrderToCSVCamel(order);
-        }
-    }
-
-    private static void saveSingleOrderToCSVCamel(Order order) throws Exception {
-//        final String FILE_NAME = order.getId()+order.getFileName()+".csv";
-        CamelContext context = new DefaultCamelContext();
-        final CsvDataFormat csvDataFormat = new CsvDataFormat();
-        csvDataFormat.setDelimiter(";");
-//        csvDataFormat.setHeader(asList("Id", "Q", "Price"));
-
-        context.addRoutes(new RouteBuilder() {
-
-            public void configure() {
-                from("direct:toCsv")
-                        .marshal(csvDataFormat)
-                        .to("file://data/csvCamel?fileName=${property.filename}");
-//                        .to("file://data/csvCamel?fileName="+FILE_NAME);
-            }
-        });
-
-        ProducerTemplate template = context.createProducerTemplate();
-        context.start();
-
-        List<Map<String, String>> body = new LinkedList<Map<String, String>>();
-        for (Product product : order.getProducts().getProduct()) {
-            Map<String, String> singleRow = new LinkedHashMap<String, String>();
-            singleRow.put("quantity", String.valueOf(product.getQuantity()));
-            singleRow.put("id", product.getId());
-            if (product.isDiscountInd()) {
-                singleRow.put("price", "0");
-            } else {
-                singleRow.put("price", product.getPrice());
-            }
-            singleRow.put("quantity", String.valueOf(product.getQuantity()));
-            body.add(singleRow);
-        }
-//        template.sendBody("direct:toCsv", body);
-        //todo
-        String filename = order.getFileName()+order.getId()+".csv";
-        template.sendBodyAndProperty("direct:toCsv", body, "filename", filename);
-        //todo
-        Thread.sleep(100);
-        context.stop();
-    }
-
-    private static void SaveOrdersToCSVBindy(List<Order> ordersList) throws Exception {
-
-        CamelContext context = new DefaultCamelContext();
-        final DataFormat format = new BindyCsvDataFormat(Product.class);
-
-        context.addRoutes(new RouteBuilder() {
-            public void configure() {
-                from("direct:toCsv")
-                        .marshal(format)
-                        .to("file://data/csv");
-            }
-        });
-
-        ProducerTemplate template = context.createProducerTemplate();
-
-        context.start();
-
-        for (Order order : ordersList) {
-            template.sendBody("direct:toCsv", order.getProducts().getProduct());
-        }
-        Thread.sleep(100);
-        context.stop();
-    }
-//todo -commented code
-//        List<Order> OrdersList = xmlToObject();
-//        Map<String, List<String>> productsMap;
-//
-//        for (Order order : OrdersList) {
-//            productsMap= MapProductColumns(order);
-////            ObjectToCSV(ProductsMap);
-////            template.sendBody("file://data/csv", "Hello");
-////            template.sendBody("test-jms:queue:test.queue", productsMap);
-//
-//        }
-
-    private static void ObjectToCSV(Map<String, List<String>> productsMap) {
-    }
-
-    private static Map<String, List<String>> MapProductColumns(Order order) {
-        Map<String, List<String>> columnsMap = new LinkedHashMap<String, List<String>>();
-        List<String> idList = new LinkedList<String>();
-        List<String> priceList = new LinkedList<String>();
-        List<String> quantityList = new LinkedList<String>();
-        List<String> discountList = new LinkedList<String>();
-        columnsMap.put("id", idList);
-        columnsMap.put("price", priceList);
-        columnsMap.put("quantity", quantityList);
-        columnsMap.put("discount", discountList);
-        for (Product product : order.getProducts().getProduct()) {
-            idList.add(product.getId());
-            priceList.add(product.getPrice());
-            quantityList.add(String.valueOf(product.getQuantity()));
-        }
-        return columnsMap;
-    }
-
-    private static List<Order> xmlToObject() throws JAXBException {
-
-        JAXBContext jc = JAXBContext.newInstance( "structure" );
-        Unmarshaller u = jc.createUnmarshaller();
-        List<Order> orderList = new ArrayList<Order>();
-
-        for (File file : getFilesInCurrentFolder()) {
-            if (file.getName().matches(".*\\.xml")) {
-                FileInputStream fileInputStream = null;
-                try {
-                    fileInputStream = new FileInputStream("data/"+file.getName());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                Order order = (Order)u.unmarshal( fileInputStream );
-                System.out.println(order.getId());
-                orderList.add(order);
-            }
-        }
-        return orderList;
-    }
-    private static void objectToXML(List<Order> orderList) throws JAXBException {
-        JAXBContext jc = JAXBContext.newInstance( "structure" );
-
-        Marshaller marshaller = jc.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        File orderFile;
-        for (Order order : orderList) {
-            String path = CONVERTED_FILES_FOLDER_PATH+order.getId()+".xml";
-            orderFile = new File(path);
-            System.out.println(order);
-            marshaller.marshal( order, orderFile );
-        }
-    }
-
-//    private static void objectToCSV(List<Order> orderList) throws JAXBException {
-//        CsvDataFormat csv = new CsvDataFormat();
-//        csv.setDelimiter(";");
-//
-//        MyRouteBuilder routeBuilder = new MyRouteBuilder();
-//        CamelContext context = new DefaultCamelContext();
-//    }
-
-    private static File[] getFilesInCurrentFolder() {
-        File sourceFolder = new File(CURRENT_FOLDER_PATH);
-        File[] filesInSourceFolder = sourceFolder.listFiles();
-        return filesInSourceFolder;
+        ConverterXMLtoCSV.saveOrdersToCsvUsingCamelCsv(ordersList);
     }
 }

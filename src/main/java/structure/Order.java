@@ -13,6 +13,7 @@ public class Order {
     private Products products;
 
     public Order() {
+        products = new Products();
     }
 
     public Order(Products products, String fileName, String id) {

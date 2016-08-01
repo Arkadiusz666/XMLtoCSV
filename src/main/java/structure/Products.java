@@ -10,6 +10,7 @@ public class Products {
     private List<Product> product = new ArrayList<Product>();
 
     public Products() {
+        product=new ArrayList<Product>();
     }
 
     public List<Product> getProduct() {
