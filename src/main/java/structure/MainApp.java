@@ -17,8 +17,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.*;
 
-import static java.util.Arrays.asList;
-
 /**
  * Created by AKrzos on 2016-07-25.
  */
@@ -73,45 +71,47 @@ public class MainApp {
 
 //        SaveOrdersToCSVBindy(ordersList);
 
-        SaveOrdersToCSVCamel(ordersList);
+        saveOrdersToCSVCamel(ordersList);
 
     }
 
-    private static void SaveOrdersToCSVCamel(List<Order> ordersList) throws Exception {
+    private static void saveOrdersToCSVCamel(List<Order> ordersList) throws Exception {
+        for (Order order : ordersList) {
+            saveSingleOrderToCSVCamel(order);
+        }
+    }
 
+    private static void saveSingleOrderToCSVCamel(Order order) throws Exception {
+        final String FILE_NAME = order.getId()+order.getFileName()+".csv";
         CamelContext context = new DefaultCamelContext();
         final CsvDataFormat csvDataFormat = new CsvDataFormat();
         csvDataFormat.setDelimiter(";");
 //        csvDataFormat.setHeader(asList("Id", "Q", "Price"));
 
         context.addRoutes(new RouteBuilder() {
+
             public void configure() {
                 from("direct:toCsv")
                         .marshal(csvDataFormat)
-//                        .convertBodyTo(String.class)
-                        .to("file://data/csvCamel");
+                        .to("file://data/csvCamel?fileName="+FILE_NAME);
             }
         });
 
         ProducerTemplate template = context.createProducerTemplate();
         context.start();
 
-        for (Order order : ordersList) {
-            List<Map<String, String>> body = new LinkedList<Map<String, String>>();
-            for (Product product : order.getProducts().getProduct()) {
-                Map<String, String> singleRow = new LinkedHashMap<String, String>();
-                singleRow.put("quantity", String.valueOf(product.getQuantity()));
-                singleRow.put("id", product.getId());
-                singleRow.put("price", product.getPrice());
-                body.add(singleRow);
-            }
-//            template.sendBody("direct:toCsv", body);
-            template.sendBodyAndHeader("direct:toCsv", body, "name", "costam2");
+        List<Map<String, String>> body = new LinkedList<Map<String, String>>();
+        for (Product product : order.getProducts().getProduct()) {
+            Map<String, String> singleRow = new LinkedHashMap<String, String>();
+            singleRow.put("quantity", String.valueOf(product.getQuantity()));
+            singleRow.put("id", product.getId());
+            singleRow.put("price", product.getPrice());
+            body.add(singleRow);
         }
+        template.sendBody("direct:toCsv", body);
 
         Thread.sleep(1000);
         context.stop();
-
     }
 
     private static void SaveOrdersToCSVBindy(List<Order> ordersList) throws Exception {
