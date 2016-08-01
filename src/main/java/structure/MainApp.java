@@ -66,7 +66,6 @@ public class MainApp {
 
     public static void main(String args[]) throws Exception {
 
-
         List<Order> ordersList = xmlToObject();
 
 //        SaveOrdersToCSVBindy(ordersList);
@@ -82,7 +81,7 @@ public class MainApp {
     }
 
     private static void saveSingleOrderToCSVCamel(Order order) throws Exception {
-        final String FILE_NAME = order.getId()+order.getFileName()+".csv";
+//        final String FILE_NAME = order.getId()+order.getFileName()+".csv";
         CamelContext context = new DefaultCamelContext();
         final CsvDataFormat csvDataFormat = new CsvDataFormat();
         csvDataFormat.setDelimiter(";");
@@ -93,7 +92,8 @@ public class MainApp {
             public void configure() {
                 from("direct:toCsv")
                         .marshal(csvDataFormat)
-                        .to("file://data/csvCamel?fileName="+FILE_NAME);
+                        .to("file://data/csvCamel?fileName=${property.filename}");
+//                        .to("file://data/csvCamel?fileName="+FILE_NAME);
             }
         });
 
@@ -105,16 +105,25 @@ public class MainApp {
             Map<String, String> singleRow = new LinkedHashMap<String, String>();
             singleRow.put("quantity", String.valueOf(product.getQuantity()));
             singleRow.put("id", product.getId());
-            singleRow.put("price", product.getPrice());
+            if (product.isDiscountInd()) {
+                singleRow.put("price", "0");
+            } else {
+                singleRow.put("price", product.getPrice());
+            }
+            singleRow.put("quantity", String.valueOf(product.getQuantity()));
             body.add(singleRow);
         }
-        template.sendBody("direct:toCsv", body);
-
-        Thread.sleep(1000);
+//        template.sendBody("direct:toCsv", body);
+        //todo
+        String filename = order.getFileName()+order.getId()+".csv";
+        template.sendBodyAndProperty("direct:toCsv", body, "filename", filename);
+        //todo
+        Thread.sleep(100);
         context.stop();
     }
 
     private static void SaveOrdersToCSVBindy(List<Order> ordersList) throws Exception {
+
         CamelContext context = new DefaultCamelContext();
         final DataFormat format = new BindyCsvDataFormat(Product.class);
 
@@ -133,7 +142,7 @@ public class MainApp {
         for (Order order : ordersList) {
             template.sendBody("direct:toCsv", order.getProducts().getProduct());
         }
-        Thread.sleep(1000);
+        Thread.sleep(100);
         context.stop();
     }
 //todo -commented code
@@ -147,8 +156,6 @@ public class MainApp {
 ////            template.sendBody("test-jms:queue:test.queue", productsMap);
 //
 //        }
-
-
 
     private static void ObjectToCSV(Map<String, List<String>> productsMap) {
     }
@@ -219,6 +226,4 @@ public class MainApp {
         File[] filesInSourceFolder = sourceFolder.listFiles();
         return filesInSourceFolder;
     }
-
-
 }
