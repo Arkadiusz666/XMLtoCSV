@@ -79,7 +79,6 @@ public class MainApp {
 
     private static void SaveOrdersToCSVCamel(List<Order> ordersList) throws Exception {
 
-
         CamelContext context = new DefaultCamelContext();
         final CsvDataFormat csvDataFormat = new CsvDataFormat();
         csvDataFormat.setDelimiter(";");
@@ -106,7 +105,8 @@ public class MainApp {
                 singleRow.put("price", product.getPrice());
                 body.add(singleRow);
             }
-            template.sendBody("direct:toCsv", body);
+//            template.sendBody("direct:toCsv", body);
+            template.sendBodyAndHeader("direct:toCsv", body, "name", "costam2");
         }
 
         Thread.sleep(1000);
