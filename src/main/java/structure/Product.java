@@ -16,10 +16,17 @@ public class Product {
     @DataField(pos=2)
     private String price;
     @DataField(pos=3)
-    private int quantity;
+    private String quantity;
     private boolean discountInd;
 
     public Product() {
+    }
+
+    public Product(String id, String price, String quantity, boolean discountInd) {
+        this.id = id;
+        this.price = price;
+        this.quantity = quantity;
+        this.discountInd = discountInd;
     }
 
     public String getId() {
@@ -40,12 +47,12 @@ public class Product {
         this.price = price;
     }
 
-    public int getQuantity() {
+    public String getQuantity() {
         return quantity;
     }
 
     @XmlAttribute(name = "quantity")
-    public void setQuantity(int quantity) {
+    public void setQuantity(String quantity) {
         this.quantity = quantity;
     }
 

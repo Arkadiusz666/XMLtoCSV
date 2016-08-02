@@ -23,8 +23,7 @@ import java.util.*;
  * Created by AKrzos on 2016-08-01.
  */
 public class ConverterXMLtoCSV {
-    private static final String CURRENT_FOLDER_PATH = "data/";
-    private static final String CONVERTED_FILES_FOLDER_PATH = "data/converted/";
+
 
     public static void saveOrdersToCsvUsingCamelCsv(List<Order> ordersList) throws Exception {
         for (Order order : ordersList) {
@@ -117,17 +116,17 @@ public class ConverterXMLtoCSV {
         return columnsMap;
     }
 
-    public static List<Order> xmlToObject() throws JAXBException {
+    public static List<Order> loadXmlToObject(String filePath) throws JAXBException {
 
         JAXBContext jc = JAXBContext.newInstance( "structure" );
         Unmarshaller u = jc.createUnmarshaller();
-        List<Order> orderList = new ArrayList<Order>();
+        List<Order> orderList = new LinkedList<Order>();
 
-        for (File file : getFilesInFolder(CURRENT_FOLDER_PATH)) {
+        for (File file : getFilesInFolder(filePath)) {
             if (file.getName().matches(".*\\.xml")) {
                 FileInputStream fileInputStream = null;
                 try {
-                    fileInputStream = new FileInputStream("data/"+file.getName());
+                    fileInputStream = new FileInputStream(filePath+file.getName());
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -139,14 +138,14 @@ public class ConverterXMLtoCSV {
         return orderList;
     }
 
-    private static void objectToXML(List<Order> orderList) throws JAXBException {
+    private static void objectToXML(List<Order> orderList, String filePath) throws JAXBException {
         JAXBContext jc = JAXBContext.newInstance( "structure" );
 
         Marshaller marshaller = jc.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
         File orderFile;
         for (Order order : orderList) {
-            String path = CONVERTED_FILES_FOLDER_PATH+order.getId()+".xml";
+            String path = filePath+order.getId()+".xml";
             orderFile = new File(path);
             System.out.println(order);
             marshaller.marshal( order, orderFile );

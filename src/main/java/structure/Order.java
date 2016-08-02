@@ -16,8 +16,8 @@ public class Order {
         products = new Products();
     }
 
-    public Order(Products products, String fileName, String id) {
-        this.products = products;
+    public Order( String fileName, String id) {
+        this.products = new Products();
         this.fileName = fileName;
         this.id = id;
     }

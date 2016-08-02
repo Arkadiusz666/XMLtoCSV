@@ -48,10 +48,12 @@ import java.util.*;
 //
 //        Each SubTask should include unit/integration testing
 public class MainApp {
+    private static final String DATA_FOLDER_PATH = "data/";
+    private static final String CONVERTED_FILES_FOLDER_PATH = "data/converted/";
 
     public static void main(String args[]) throws Exception {
 
-        List<Order> ordersList = ConverterXMLtoCSV.xmlToObject();
+        List<Order> ordersList = ConverterXMLtoCSV.loadXmlToObject(DATA_FOLDER_PATH);
 
         ConverterXMLtoCSV.saveOrdersToCsvUsingBindy(ordersList);
 
