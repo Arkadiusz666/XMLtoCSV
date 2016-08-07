@@ -16,21 +16,25 @@ public class Order {
         products = new Products();
     }
 
-    public Order( String fileName, String id) {
+    public Order(String fileName, String id) {
         this.products = new Products();
         this.fileName = fileName;
         this.id = id;
     }
+
     public String getId() {
         return id;
     }
+
     @XmlAttribute(name = "id")
     public void setId(String id) {
         this.id = id;
     }
+
     public String getFileName() {
         return fileName;
     }
+
     @XmlAttribute(name = "fileName")
     public void setFileName(String fileName) {
         this.fileName = fileName;

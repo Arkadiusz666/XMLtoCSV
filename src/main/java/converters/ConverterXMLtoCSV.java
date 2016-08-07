@@ -1,4 +1,4 @@
-package converter;
+package converters;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
@@ -12,7 +12,6 @@ import structure.Product;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,14 +31,10 @@ public class ConverterXMLtoCSV {
     }
 
     public static void saveSingleOrderToCsvUsingCamelCsv(Order order) throws Exception {
+        //todo export context to class, or method
         CamelContext context = new DefaultCamelContext();
         final CsvDataFormat csvDataFormat = new CsvDataFormat();
-        csvDataFormat.setDelimiter(";");
-        List<String> firstColumn = new LinkedList<String>();
-        firstColumn.add("id");
-        firstColumn.add("price");
-        firstColumn.add("quantity");
-        csvDataFormat.setHeader(firstColumn);
+        configureCsvDataFormat(csvDataFormat);
 
         context.addRoutes(new RouteBuilder() {
 
@@ -55,21 +50,35 @@ public class ConverterXMLtoCSV {
 
         List<Map<String, String>> body = new LinkedList<Map<String, String>>();
         for (Product product : order.getProducts().getProduct()) {
-            Map<String, String> singleRow = new LinkedHashMap<String, String>();
-            singleRow.put("quantity", String.valueOf(product.getQuantity()));
-            singleRow.put("id", product.getId());
-            if (product.isDiscountInd()) {
-                singleRow.put("price", product.getPrice());
-            } else {
-                singleRow.put("price", "0");
-            }
-            singleRow.put("quantity", String.valueOf(product.getQuantity()));
+            Map<String, String> singleRow = fillSingleProductWithData(product);
             body.add(singleRow);
         }
-        String filename = order.getFileName()+order.getId()+".csv";
+        String filename = order.getFileName() + order.getId() + ".csv";
         template.sendBodyAndProperty("direct:toCsv", body, "filename", filename);
         Thread.sleep(100);
         context.stop();
+    }
+
+    private static void configureCsvDataFormat(CsvDataFormat csvDataFormat) {
+        csvDataFormat.setDelimiter(";");
+        List<String> firstColumn = new LinkedList<String>();
+        firstColumn.add("id");
+        firstColumn.add("price");
+        firstColumn.add("quantity");
+        csvDataFormat.setHeader(firstColumn);
+    }
+
+    private static Map<String, String> fillSingleProductWithData(Product product) {
+        Map<String, String> singleRow = new LinkedHashMap<String, String>();
+        singleRow.put("quantity", String.valueOf(product.getQuantity()));
+        singleRow.put("id", product.getId());
+        if (product.isDiscountInd()) {
+            singleRow.put("price", product.getPrice());
+        } else {
+            singleRow.put("price", "0");
+        }
+        singleRow.put("quantity", String.valueOf(product.getQuantity()));
+        return singleRow;
     }
 
     public static void saveOrdersToCsvUsingBindy(List<Order> ordersList) throws Exception {
@@ -91,34 +100,34 @@ public class ConverterXMLtoCSV {
 
         for (Order order : ordersList) {
             List<Product> body = order.getProducts().getProduct();
-            String filename = order.getFileName()+order.getId()+".csv";
+            String filename = order.getFileName() + order.getId() + ".csv";
             template.sendBodyAndProperty("direct:toCsv", body, "filename", filename);
         }
         Thread.sleep(100);
         context.stop();
     }
-
-    private static Map<String, List<String>> MapProductColumns(Order order) {
-        Map<String, List<String>> columnsMap = new LinkedHashMap<String, List<String>>();
-        List<String> idList = new LinkedList<String>();
-        List<String> priceList = new LinkedList<String>();
-        List<String> quantityList = new LinkedList<String>();
-        List<String> discountList = new LinkedList<String>();
-        columnsMap.put("id", idList);
-        columnsMap.put("price", priceList);
-        columnsMap.put("quantity", quantityList);
-        columnsMap.put("discount", discountList);
-        for (Product product : order.getProducts().getProduct()) {
-            idList.add(product.getId());
-            priceList.add(product.getPrice());
-            quantityList.add(String.valueOf(product.getQuantity()));
-        }
-        return columnsMap;
-    }
+//
+//    private static Map<String, List<String>> MapProductColumns(Order order) {
+//        Map<String, List<String>> columnsMap = new LinkedHashMap<String, List<String>>();
+//        List<String> idList = new LinkedList<String>();
+//        List<String> priceList = new LinkedList<String>();
+//        List<String> quantityList = new LinkedList<String>();
+//        List<String> discountList = new LinkedList<String>();
+//        columnsMap.put("id", idList);
+//        columnsMap.put("price", priceList);
+//        columnsMap.put("quantity", quantityList);
+//        columnsMap.put("discount", discountList);
+//        for (Product product : order.getProducts().getProduct()) {
+//            idList.add(product.getId());
+//            priceList.add(product.getPrice());
+//            quantityList.add(String.valueOf(product.getQuantity()));
+//        }
+//        return columnsMap;
+//    }
 
     public static List<Order> loadXmlToObject(String filePath) throws JAXBException {
 
-        JAXBContext jc = JAXBContext.newInstance( "structure" );
+        JAXBContext jc = JAXBContext.newInstance("structure");
         Unmarshaller u = jc.createUnmarshaller();
         List<Order> orderList = new LinkedList<Order>();
 
@@ -126,11 +135,11 @@ public class ConverterXMLtoCSV {
             if (file.getName().matches(".*\\.xml")) {
                 FileInputStream fileInputStream = null;
                 try {
-                    fileInputStream = new FileInputStream(filePath+file.getName());
+                    fileInputStream = new FileInputStream(filePath + file.getName());
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
-                Order order = (Order)u.unmarshal( fileInputStream );
+                Order order = (Order) u.unmarshal(fileInputStream);
                 System.out.println(order.getId());
                 orderList.add(order);
             }
@@ -138,19 +147,19 @@ public class ConverterXMLtoCSV {
         return orderList;
     }
 
-    private static void objectToXML(List<Order> orderList, String filePath) throws JAXBException {
-        JAXBContext jc = JAXBContext.newInstance( "structure" );
-
-        Marshaller marshaller = jc.createMarshaller();
-        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-        File orderFile;
-        for (Order order : orderList) {
-            String path = filePath+order.getId()+".xml";
-            orderFile = new File(path);
-            System.out.println(order);
-            marshaller.marshal( order, orderFile );
-        }
-    }
+//    private static void objectToXML(List<Order> orderList, String filePath) throws JAXBException {
+//        JAXBContext jc = JAXBContext.newInstance("structure");
+//
+//        Marshaller marshaller = jc.createMarshaller();
+//        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+//        File orderFile;
+//        for (Order order : orderList) {
+//            String path = filePath + order.getId() + ".xml";
+//            orderFile = new File(path);
+//            System.out.println(order);
+//            marshaller.marshal(order, orderFile);
+//        }
+//    }
 
     public static File[] getFilesInFolder(String path) {
         File sourceFolder = new File(path);

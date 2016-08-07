@@ -8,14 +8,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 /**
  * Created by AKrzos on 2016-07-25.
  */
-@CsvRecord(separator = ";", generateHeaderColumns=true)
+@CsvRecord(separator = ";", generateHeaderColumns = true)
 public class Product {
 
-    @DataField(pos=1)
+    @DataField(pos = 1)
     private String id;
-    @DataField(pos=2)
+    @DataField(pos = 2)
     private String price;
-    @DataField(pos=3)
+    @DataField(pos = 3)
     private String quantity;
     private boolean discountInd;
 
@@ -72,6 +72,6 @@ public class Product {
                 ", price='" + price + '\'' +
                 ", quantity=" + quantity +
                 ", discountInd=" + discountInd +
-                '}' +"\n";
+                '}' + "\n";
     }
 }

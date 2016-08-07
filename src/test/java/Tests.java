@@ -1,4 +1,4 @@
-import converter.ConverterXMLtoCSV;
+import converters.ConverterXMLtoCSV;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.Test;
 import structure.Order;
 import structure.Product;
-import structure.Products;
 
 import javax.xml.bind.JAXBException;
 import java.io.*;
@@ -48,12 +47,14 @@ public class Tests {
             e.printStackTrace();
         }
     }
+
     @Before
     public void prepareTestOrder() {
         testOrder.getProducts().getProduct().add(new Product("id1", "11", "1", false));
         testOrder.getProducts().getProduct().add(new Product("id2", "22", "2", true));
         testOrder.getProducts().getProduct().add(new Product("id3", "33", "3", false));
     }
+
     @Test
     public void testLoadingXml() {
         List<Order> orderListLoaded = new LinkedList<>();
@@ -67,6 +68,7 @@ public class Tests {
 
         assertEquals(orderListLoaded.toString(), orderListExpected.toString());
     }
+
     @Test
     public void csvFileSavedWithTheRightName() throws Exception {
         Order order = new Order();

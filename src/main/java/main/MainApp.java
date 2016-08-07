@@ -1,6 +1,7 @@
-package structure;
+package main;
 
-import converter.ConverterXMLtoCSV;
+import converters.ConverterXMLtoCSV;
+import structure.Order;
 
 import java.util.*;
 
