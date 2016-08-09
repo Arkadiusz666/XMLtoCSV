@@ -1,10 +1,5 @@
 package main;
 
-import converters.ConverterXMLtoCSV;
-import structure.Order;
-
-import java.util.*;
-
 /**
  * Created by AKrzos on 2016-07-25.
  */
@@ -54,10 +49,5 @@ public class MainApp {
 
     public static void main(String args[]) throws Exception {
 
-        List<Order> ordersList = ConverterXMLtoCSV.loadXmlToObject(DATA_FOLDER_PATH);
-
-        ConverterXMLtoCSV.saveOrdersToCsvUsingBindy(ordersList);
-
-        ConverterXMLtoCSV.saveOrdersToCsvUsingCamelCsv(ordersList);
     }
 }

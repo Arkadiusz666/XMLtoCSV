@@ -1,4 +1,3 @@
-import converters.ConverterXMLtoCSV;
 import org.apache.camel.EndpointInject;
 import org.apache.camel.Produce;
 import org.apache.camel.ProducerTemplate;
@@ -57,28 +56,12 @@ public class Tests {
 
     @Test
     public void testLoadingXml() {
-        List<Order> orderListLoaded = new LinkedList<>();
-        List<Order> orderListExpected = new LinkedList<>();
-        orderListExpected.add(testOrder);
-        try {
-            orderListLoaded = ConverterXMLtoCSV.loadXmlToObject("data/testData/");
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
 
-        assertEquals(orderListLoaded.toString(), orderListExpected.toString());
     }
 
     @Test
     public void csvFileSavedWithTheRightName() throws Exception {
-        Order order = new Order();
-        order.setId("ID");
-        order.setFileName("FILENAME");
 
-        ConverterXMLtoCSV.saveSingleOrderToCsvUsingCamelCsv(order);
-
-        File target = new File("data/csvCamel/FILENAMEID.csv");
-        assertTrue("File not saved correctly", target.exists());
 
         //todo czy dobrze do pojo laduje
         //todo czy zapisuje odpowiednio do csv czy id;asd;das
@@ -86,4 +69,5 @@ public class Tests {
         //nieprawidlowe dane itn>string
         //co jesli nie ma kolumny?
     }
+
 }
